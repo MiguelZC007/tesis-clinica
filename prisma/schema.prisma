@@ -1,0 +1,245 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id        String     @id @default(uuid())
+    fullname  String?
+    birthdate DateTime?
+    cellphone String?
+    email     String?    @unique
+    ci        String?    @unique
+    address   String?
+    state     String?
+    password  String?
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    patients  Patient[]
+    employees Employee[]
+    sessions  Session[]
+}
+
+model Session {
+    id        String   @id @default(uuid())
+    active    Boolean? @default(true)
+    token     String?
+    expireIn  String?
+    browser   String?
+    device    String?
+    platform  String?
+    version   String?
+    os        String?
+    source    String?
+    origin    String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    user      User     @relation(fields: [userId], references: [id])
+    userId    String
+}
+
+model Employee {
+    id               String           @id @default(uuid())
+    user             User             @relation(fields: [userId], references: [id])
+    userId           String
+    roles            Role[]
+    createdAt        DateTime         @default(now())
+    updatedAt        DateTime         @updatedAt
+    medicalHistories MedicalHistory[]
+    appointments     Appointment[]
+    invoices         Invoice[]
+}
+
+model Role {
+    id          String     @id @default(uuid())
+    name        String
+    description String?
+    active      Boolean    @default(true)
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+    employee    Employee[]
+}
+
+model Patient {
+    id                     String           @id @default(uuid())
+    paternalMedicalHistory String[]
+    maternalMedicalHistory String[]
+    surgicalHistory        String[]
+    laboratoryHistory      String[]
+    socialHistory          String[]
+    allergies              String[]
+    bloodType              String?
+    user                   User             @relation(fields: [userId], references: [id])
+    userId                 String
+    createdAt              DateTime         @default(now())
+    updatedAt              DateTime         @updatedAt
+    medicalHistories       MedicalHistory[]
+    appointments           Appointment[]
+    invoices               Invoice[]
+}
+
+model MedicalHistory {
+    id          String       @id @default(uuid())
+    patient     Patient      @relation(fields: [patientId], references: [id])
+    patientId   String
+    doctor      Employee     @relation(fields: [doctorId], references: [id])
+    doctorId    String
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    vitalSign   VitalSign    @relation(fields: [vitalSignId], references: [id])
+    vitalSignId String
+    predictions Prediction[]
+    diagnostics Diagnostic[]
+}
+
+model Prediction {
+    id               String         @id @default(uuid())
+    name             String
+    createdAt        DateTime       @default(now())
+    updatedAt        DateTime       @updatedAt
+    MedicalHistory   MedicalHistory @relation(fields: [medicalHistoryId], references: [id])
+    medicalHistoryId String
+    diagnostics      Diagnostic[]
+}
+
+model Diagnostic {
+    id               String         @id @default(uuid())
+    name             String
+    createdAt        DateTime       @default(now())
+    updatedAt        DateTime       @updatedAt
+    MedicalHistory   MedicalHistory @relation(fields: [medicalHistoryId], references: [id])
+    medicalHistoryId String
+    prediction       Prediction     @relation(fields: [predictionId], references: [id])
+    predictionId     String
+    Treatment        Treatment[]
+}
+
+model Treatment {
+    id          String       @id @default(uuid())
+    description String
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    diagnostics Diagnostic[]
+    quantity    Int
+    medicine    Medicine     @relation(fields: [medicineId], references: [id])
+    medicineId  String
+}
+
+model Medicine {
+    id                  String      @id @default(uuid())
+    name                String
+    description         String?
+    recomendations      String[]
+    therapeuticCategory String?
+    activeIngredients   String[]
+    pharmaceuticalForm  String?
+    dosage              String?
+    contraindications   String[]
+    Manufacturer        String
+    createdAt           DateTime    @default(now())
+    updatedAt           DateTime    @updatedAt
+    Treatment           Treatment[]
+}
+
+model VitalSign {
+    id                 String           @id @default(uuid())
+    description        String?
+    oxygenSaturation   String?
+    temperature        String?
+    heartRate          String?
+    breathingFrequency String?
+    weight             String?
+    height             String?
+    diastolicPressure  String?
+    systolicPressure   String?
+    createdAt          DateTime         @default(now())
+    updatedAt          DateTime         @updatedAt
+    MedicalHistory     MedicalHistory[]
+}
+
+model Product {
+    id            String       @id @default(uuid())
+    name          String
+    description   String?
+    price         Decimal      @default(0.0) @db.Decimal(99, 2)
+    active        Boolean      @default(true)
+    createdAt     DateTime     @default(now())
+    updatedAt     DateTime     @updatedAt
+    category      Category     @relation(fields: [categoryId], references: [id])
+    categoryId    String
+    subCategory   SubCategory? @relation(fields: [subCategoryId], references: [id])
+    subCategoryId String?
+    details       Detail[]
+}
+
+model Category {
+    id          String    @id @default(uuid())
+    name        String
+    description String?
+    programable Boolean   @default(false)
+    active      Boolean   @default(true)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    Product     Product[]
+}
+
+model SubCategory {
+    id          String    @id @default(uuid())
+    name        String
+    description String?
+    active      Boolean   @default(true)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    Product     Product[]
+}
+
+model Appointment {
+    id          String    @id @default(uuid())
+    from        DateTime
+    to          DateTime
+    remember    Boolean   @default(false)
+    description String?
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    patient     Patient   @relation(fields: [patientId], references: [id])
+    patientId   String
+    doctor      Employee  @relation(fields: [doctorId], references: [id])
+    doctorId    String
+    invoices    Invoice[]
+}
+
+model Invoice {
+    id            String       @id @default(uuid())
+    nit           String?
+    patient       Patient      @relation(fields: [patientId], references: [id])
+    cashier       Employee     @relation(fields: [employeeId], references: [id])
+    description   String?
+    total         Decimal      @default(0.0) @db.Decimal(99, 2)
+    discount      Decimal      @default(0.0) @db.Decimal(99, 2)
+    createdAt     DateTime     @default(now())
+    updatedAt     DateTime     @updatedAt
+    details       Detail[]
+    appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+    appointmentId String?
+    patientId     String
+    employeeId    String
+}
+
+model Detail {
+    id          String   @id @default(uuid())
+    price       Decimal  @default(0.0) @db.Decimal(99, 2)
+    discount    Decimal  @default(0.0) @db.Decimal(99, 2)
+    subTotal    Decimal  @default(0.0) @db.Decimal(99, 2)
+    quantity    Int      @default(1)
+    description String?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+    invoiceId   String
+    product     Product  @relation(fields: [productId], references: [id])
+    productId   String
+}
