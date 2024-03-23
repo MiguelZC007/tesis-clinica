@@ -58,7 +58,7 @@ export class NotFoundExceptionFilter implements ExceptionFilter {
     });
 
     if (responseData.message && responseData.message.includes('Cannot GET')) {
-      const html = '<h1>Not Found</h1>'; // Replace with your HTML content
+      const html = '<h1>Not Found</h1>';
       response.header('content-type', 'text/html');
       response.status(httpStatus).send(html);
     } else {

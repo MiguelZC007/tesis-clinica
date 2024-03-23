@@ -11,6 +11,7 @@ import { WinstonModule } from 'nest-winston';
 import { resolve } from 'path';
 import { PrismaModule } from './prisma/prisma.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -39,7 +40,8 @@ import { CacheModule } from '@nestjs/cache-manager';
       ],
     }),
     CacheModule.register({ isGlobal: true }),
-    PrismaModule
+    PrismaModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [
